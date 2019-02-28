@@ -35,12 +35,12 @@ _NUM_CHANNELS = 3
 _NUM_CLASSES = 1001
 
 _NUM_IMAGES = {
-    'train': 1281167,
-    'validation': 50000,
+    'train': 5,
+    'validation': 5,
 }
 
-_NUM_TRAIN_FILES = 1024
-_SHUFFLE_BUFFER = 10000
+_NUM_TRAIN_FILES = 1
+_SHUFFLE_BUFFER = 1
 
 DATASET_NAME = 'ImageNet'
 
@@ -51,12 +51,12 @@ def get_filenames(is_training, data_dir):
   """Return filenames for dataset."""
   if is_training:
     return [
-        os.path.join(data_dir, 'train-%05d-of-01024' % i)
+        os.path.join(data_dir, 'train', 'part-r-%05d' % i)
         for i in range(_NUM_TRAIN_FILES)]
   else:
     return [
-        os.path.join(data_dir, 'validation-%05d-of-00128' % i)
-        for i in range(128)]
+        os.path.join(data_dir, 'val', 'part-r-%05d' % i)
+        for i in range(_NUM_TRAIN_FILES)]
 
 
 def _parse_example_proto(example_serialized):
@@ -95,28 +95,28 @@ def _parse_example_proto(example_serialized):
   """
   # Dense features in Example proto.
   feature_map = {
-      'image/encoded': tf.FixedLenFeature([], dtype=tf.string,
+      'encoded': tf.FixedLenFeature([], dtype=tf.string,
                                           default_value=''),
-      'image/class/label': tf.FixedLenFeature([], dtype=tf.int64,
+      'class/label': tf.FixedLenFeature([], dtype=tf.int64,
                                               default_value=-1),
-      'image/class/text': tf.FixedLenFeature([], dtype=tf.string,
+      'class/text': tf.FixedLenFeature([], dtype=tf.string,
                                              default_value=''),
   }
-  sparse_float32 = tf.VarLenFeature(dtype=tf.float32)
-  # Sparse features in Example proto.
-  feature_map.update(
-      {k: sparse_float32 for k in ['image/object/bbox/xmin',
-                                   'image/object/bbox/ymin',
-                                   'image/object/bbox/xmax',
-                                   'image/object/bbox/ymax']})
+  # sparse_float32 = tf.VarLenFeature(dtype=tf.float32)
+  # # Sparse features in Example proto.
+  # feature_map.update(
+  #     {k: sparse_float32 for k in ['image/object/bbox/xmin',
+  #                                  'image/object/bbox/ymin',
+  #                                  'image/object/bbox/xmax',
+  #                                  'image/object/bbox/ymax']})
 
   features = tf.parse_single_example(example_serialized, feature_map)
-  label = tf.cast(features['image/class/label'], dtype=tf.int32)
+  label = tf.cast(features['class/label'], dtype=tf.int32)
 
-  xmin = tf.expand_dims(features['image/object/bbox/xmin'].values, 0)
-  ymin = tf.expand_dims(features['image/object/bbox/ymin'].values, 0)
-  xmax = tf.expand_dims(features['image/object/bbox/xmax'].values, 0)
-  ymax = tf.expand_dims(features['image/object/bbox/ymax'].values, 0)
+  xmin = tf.expand_dims(tf.constant([0]), 0)
+  ymin = tf.expand_dims(tf.constant([0]), 0)
+  xmax = tf.expand_dims(tf.constant([1]), 0)
+  ymax = tf.expand_dims(tf.constant([1]), 0)
 
   # Note that we impose an ordering of (y, x) just to make life difficult.
   bbox = tf.concat([ymin, xmin, ymax, xmax], 0)
@@ -126,7 +126,7 @@ def _parse_example_proto(example_serialized):
   bbox = tf.expand_dims(bbox, 0)
   bbox = tf.transpose(bbox, [0, 2, 1])
 
-  return features['image/encoded'], label, bbox
+  return features['encoded'], label, bbox
 
 
 def parse_record(raw_record, is_training, dtype):
@@ -178,9 +178,9 @@ def input_fn(is_training, data_dir, batch_size, num_epochs=1,
   filenames = get_filenames(is_training, data_dir)
   dataset = tf.data.Dataset.from_tensor_slices(filenames)
 
-  if is_training:
-    # Shuffle the input files
-    dataset = dataset.shuffle(buffer_size=_NUM_TRAIN_FILES)
+  # if is_training:
+  #   # Shuffle the input files
+  #   dataset = dataset.shuffle(buffer_size=_NUM_TRAIN_FILES)
 
   # Convert to individual records.
   # cycle_length = 10 means 10 files will be read and deserialized in parallel.

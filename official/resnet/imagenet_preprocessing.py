@@ -93,6 +93,7 @@ def _decode_crop_and_flip(image_buffer, bbox, num_channels):
   cropped = tf.image.decode_and_crop_jpeg(
       image_buffer, crop_window, channels=num_channels)
 
+
   # Flip to add a little more random distortion in.
   cropped = tf.image.random_flip_left_right(cropped)
   return cropped
@@ -247,9 +248,10 @@ def preprocess_image(image_buffer, bbox, output_height, output_width,
     A preprocessed image.
   """
   if is_training:
-    # For training, we want to randomize some of the distortions.
-    image = _decode_crop_and_flip(image_buffer, bbox, num_channels)
-    image = _resize_image(image, output_height, output_width)
+    # # For training, we want to randomize some of the distortions.
+    # image = _decode_crop_and_flip(image_buffer, bbox, num_channels)
+    # image = _resize_image(image, output_height, output_width)
+    image = tf.image.decode_jpeg(image_buffer, channels=num_channels)
   else:
     # For validation, we want to decode, resize, then just crop the middle.
     image = tf.image.decode_jpeg(image_buffer, channels=num_channels)

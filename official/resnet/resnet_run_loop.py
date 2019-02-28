@@ -79,9 +79,9 @@ def process_record_dataset(dataset,
   # Prefetches a batch at a time to smooth out the time taken to load input
   # files for shuffling and processing.
   dataset = dataset.prefetch(buffer_size=batch_size)
-  if is_training:
-    # Shuffles records before repeating to respect epoch boundaries.
-    dataset = dataset.shuffle(buffer_size=shuffle_buffer)
+  # if is_training:
+  #   # Shuffles records before repeating to respect epoch boundaries.
+  #   dataset = dataset.shuffle(buffer_size=shuffle_buffer)
 
   # Repeats the dataset for the number of epochs to train.
   dataset = dataset.repeat(num_epochs)
