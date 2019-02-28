@@ -113,10 +113,10 @@ def _parse_example_proto(example_serialized):
   features = tf.parse_single_example(example_serialized, feature_map)
   label = tf.cast(features['class/label'], dtype=tf.int32)
 
-  xmin = tf.expand_dims(tf.constant([0]), 0)
-  ymin = tf.expand_dims(tf.constant([0]), 0)
-  xmax = tf.expand_dims(tf.constant([1]), 0)
-  ymax = tf.expand_dims(tf.constant([1]), 0)
+  xmin = tf.expand_dims(tf.constant([0.1]), 0)
+  ymin = tf.expand_dims(tf.constant([0.1]), 0)
+  xmax = tf.expand_dims(tf.constant([0.9]), 0)
+  ymax = tf.expand_dims(tf.constant([0.9]), 0)
 
   # Note that we impose an ordering of (y, x) just to make life difficult.
   bbox = tf.concat([ymin, xmin, ymax, xmax], 0)
