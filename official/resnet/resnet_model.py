@@ -541,6 +541,6 @@ class Model(object):
       inputs = tf.identity(inputs, 'final_reduce_mean')
 
       inputs = tf.squeeze(inputs, axes)
-      inputs = tf.layers.dense(inputs=inputs, units=self.num_classes)
+      inputs = tf.layers.dense(inputs=inputs, kernel_initializer=tf.variance_scaling_initializer(), units=self.num_classes)
       inputs = tf.identity(inputs, 'final_dense')
       return inputs

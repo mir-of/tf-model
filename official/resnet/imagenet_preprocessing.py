@@ -76,7 +76,8 @@ def _decode_crop_and_flip(image_buffer, bbox, num_channels):
   sample_distorted_bounding_box = tf.image.sample_distorted_bounding_box(
       tf.image.extract_jpeg_shape(image_buffer),
       bounding_boxes=bbox,
-      min_object_covered=0.1,
+      #min_object_covered=0.1,
+      min_object_covered=0.0,
       aspect_ratio_range=[0.75, 1.33],
       area_range=[0.05, 1.0],
       max_attempts=100,
