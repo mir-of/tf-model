@@ -34,8 +34,7 @@ def main(args):
     wr = csv.writer(f, dialect='excel')
     wr.writerows(var_list)
 
-  
-  sess = tf.Session()
+  sess = tf.Session(config=tf.ConfigProto(allow_soft_placement=True))
   saver = tf.train.import_meta_graph(os.path.join(args.ckpt_dir, args.meta_file))
   saver.restore(sess, checkpoint_path)
   
