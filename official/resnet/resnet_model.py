@@ -475,7 +475,7 @@ class Model(object):
       A variable scope for the model.
     """
 
-    return tf.variable_scope('resnet_model',
+    return tf.variable_scope('Resnet',
                              custom_getter=self._custom_dtype_getter)
 
   def __call__(self, inputs, training):
