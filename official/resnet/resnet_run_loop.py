@@ -373,10 +373,11 @@ def resnet_model_fn(features, labels, mode, model_class,
     tf.identity(learning_rate, name='learning_rate')
     tf.summary.scalar('learning_rate', learning_rate)
 
-    optimizer = tf.train.MomentumOptimizer(
-        learning_rate=learning_rate,
-        momentum=momentum
-    )
+    # optimizer = tf.train.MomentumOptimizer(
+    #     learning_rate=learning_rate,
+    #     momentum=momentum
+    # )
+    optimizer = tf.train.GradientDescentOptimizer(learning_rate=learning_rate)
 
     def _dense_grad_filter(gvs):
       """Only apply gradient updates to the final layer.
