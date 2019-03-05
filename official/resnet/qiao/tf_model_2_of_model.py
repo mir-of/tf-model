@@ -7,7 +7,7 @@ def parse_arguements(argv):
   parser = argparse.ArgumentParser()
 
   parser.add_argument('--tf_model_dir', type=str, help='',
-                      default='/home/qiaojing/git-repo/tf_model/models/official/resnet/qiao/resnet_npy_output')
+                      default='/home/qiaojing/git-repo/tf_model/models/official/resnet/qiao/resnet_npy_out')
   parser.add_argument('--of_model_list', type=str, help='',
                       default='/home/qiaojing/git-repo/tf_model/models/official/resnet/qiao/resnet50_namelist.txt')
   parser.add_argument('--output_dir', type=str, help='', default='./resnet_of_model')
