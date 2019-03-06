@@ -48,10 +48,12 @@ def batch_norm(inputs, training, data_format, name=None):
   """Performs a batch normalization using a standard set of parameters."""
   # We set fused=True for a significant performance boost. See
   # https://www.tensorflow.org/performance/performance_guide#common_fused_ops
-  return tf.layers.batch_normalization(
+  outputs = tf.layers.batch_normalization(
       inputs=inputs, axis=1 if data_format == 'channels_first' else 3,
       momentum=_BATCH_NORM_DECAY, epsilon=_BATCH_NORM_EPSILON, center=True,
       scale=True, training=training, fused=True, name=name)
+  print('{} shape: {}'.format(name, outputs.get_shape()))
+  return outputs
 
 
 def fixed_padding(inputs, kernel_size, data_format):
@@ -88,11 +90,13 @@ def conv2d_fixed_padding(inputs, filters, kernel_size, strides, data_format, nam
   if strides > 1:
     inputs = fixed_padding(inputs, kernel_size, data_format)
 
-  return tf.layers.conv2d(
+  outputs = tf.layers.conv2d(
       inputs=inputs, filters=filters, kernel_size=kernel_size, strides=strides,
       padding=('SAME' if strides == 1 else 'VALID'), use_bias=False,
       kernel_initializer=tf.variance_scaling_initializer(),
       data_format=data_format, name=name)
+  print('{} shape: {}'.format(name, outputs.get_shape()))
+  return outputs
 
 
 ################################################################################
@@ -501,6 +505,7 @@ class Model(object):
           inputs=inputs, filters=self.num_filters, kernel_size=self.kernel_size,
           strides=self.conv_stride, data_format=self.data_format, name='conv1')
       inputs = tf.identity(inputs, 'initial_conv')
+      print('conv1 shape: {}'.format(inputs.get_shape()))
 
       # We do not include batch normalization or activation functions in V2
       # for the initial conv1 because the first ResNet unit will perform these
@@ -516,6 +521,7 @@ class Model(object):
             strides=self.first_pool_stride, padding='SAME',
             data_format=self.data_format, name='pool1')
         inputs = tf.identity(inputs, 'initial_max_pool')
+        print('pool1 shape: {}'.format(inputs.get_shape()))
 
       for i, num_blocks in enumerate(self.block_sizes):
         num_filters = self.num_filters * (2**i)
@@ -539,9 +545,11 @@ class Model(object):
       axes = [2, 3] if self.data_format == 'channels_first' else [1, 2]
       inputs = tf.reduce_mean(inputs, axes, keepdims=True, name='pool5')
       inputs = tf.identity(inputs, 'final_reduce_mean')
+      print('pool5 shape: {}'.format(inputs.get_shape()))
 
       inputs = tf.squeeze(inputs, axes)
       inputs = tf.layers.dense(inputs=inputs, kernel_initializer=tf.variance_scaling_initializer(),
                                units=self.num_classes, name='fc1001')
       inputs = tf.identity(inputs, 'final_dense')
+      print('fc1001 shape: {}'.format(inputs.get_shape()))
       return inputs
