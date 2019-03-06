@@ -367,7 +367,7 @@ def resnet_model_fn(features, labels, mode, model_class,
     global_step = tf.train.get_or_create_global_step()
 
     # learning_rate = learning_rate_fn(global_step)
-    learning_rate = 0.032
+    learning_rate = 0.0032
 
     # Create a tensor named learning_rate for logging purposes
     tf.identity(learning_rate, name='learning_rate')
