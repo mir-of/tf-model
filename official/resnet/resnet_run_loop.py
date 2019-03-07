@@ -561,7 +561,9 @@ def resnet_main(
   # -----------------------------------------------------------------------#
   # add hooks
   from hooks import DumpingTensorHook
-  dhook = DumpingTensorHook(include_keywords='probe')
+  prefixes = ['Resnet', 'gradients']
+  dhook = DumpingTensorHook(prefixes,
+                            exclude_keywords=['Assign', 'read', 'Initializer'])
   # -----------------------------------------------------------------------#
   for cycle_index, num_train_epochs in enumerate(schedule):
     tf.logging.info('Starting cycle: %d/%d', cycle_index, int(n_loops))
