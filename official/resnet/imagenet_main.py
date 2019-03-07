@@ -30,6 +30,8 @@ from official.resnet import imagenet_preprocessing
 from official.resnet import resnet_model
 from official.resnet import resnet_run_loop
 
+import debug
+
 _DEFAULT_IMAGE_SIZE = 224
 _NUM_CHANNELS = 3
 _NUM_CLASSES = 1001
@@ -154,6 +156,8 @@ def parse_record(raw_record, is_training, dtype):
       num_channels=_NUM_CHANNELS,
       is_training=is_training)
   image = tf.cast(image, dtype)
+  image = debug.add_prob(image, name='image_after_preprocess_probe')
+  label = debug.add_prob(label, name='label_after_preprocess_probe')
 
   return image, label
 

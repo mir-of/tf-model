@@ -560,18 +560,19 @@ def resnet_main(
     schedule = [flags_obj.epochs_between_evals for _ in range(int(n_loops))]
     schedule[-1] = flags_obj.train_epochs - sum(schedule[:-1])  # over counting.
 
-  # -----------------------------------------------------------------------#
-  # add hooks
-  from hooks import DumpingTensorHook
-  prefixes = ['Resnet', 'gradients', 'cross_entropy']
-  dhook = DumpingTensorHook(cycle_index, prefixes,
-                            exclude_keywords=['Assign', 'read', 'Initializer'])
-  # -----------------------------------------------------------------------#
+
   for cycle_index, num_train_epochs in enumerate(schedule):
     tf.logging.info('Starting cycle: %d/%d', cycle_index, int(n_loops))
 
     if num_train_epochs:
-
+      # -----------------------------------------------------------------------#
+      # add hooks
+      from hooks import DumpingTensorHook
+      prefixes = ['Resnet', 'gradients', 'cross_entropy_probe', 'labels_probe',
+                  'image_after_preprocess_probe', 'label_after_preprocess_probe']
+      dhook = DumpingTensorHook(cycle_index, prefixes,
+                                exclude_keywords=['Assign', 'read', 'Initializer'])
+      # -----------------------------------------------------------------------#
       classifier.train(input_fn=lambda: input_fn_train(num_train_epochs),
                        hooks=[dhook], max_steps=flags_obj.max_train_steps)
 
