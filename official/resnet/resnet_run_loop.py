@@ -42,7 +42,7 @@ from official.resnet import imagenet_preprocessing
 from official.utils.misc import distribution_utils
 from official.utils.misc import model_helpers
 
-
+import debug
 ################################################################################
 # Functions for input processing.
 ################################################################################
@@ -344,6 +344,7 @@ def resnet_model_fn(features, labels, mode, model_class,
   # Calculate loss, which includes softmax cross entropy and L2 regularization.
   cross_entropy = tf.losses.sparse_softmax_cross_entropy(
       logits=logits, labels=labels)
+  cross_entropy = debug.add_prob(cross_entropy, name='cross_entropy')
 
   # Create a tensor named cross_entropy for logging purposes.
   tf.identity(cross_entropy, name='cross_entropy')
@@ -561,7 +562,7 @@ def resnet_main(
   # -----------------------------------------------------------------------#
   # add hooks
   from hooks import DumpingTensorHook
-  prefixes = ['Resnet', 'gradients']
+  prefixes = ['Resnet', 'gradients', 'cross_entropy']
   dhook = DumpingTensorHook(prefixes,
                             exclude_keywords=['Assign', 'read', 'Initializer'])
   # -----------------------------------------------------------------------#
