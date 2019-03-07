@@ -16,7 +16,8 @@ class DumpingTensorHook(basic_session_run_hooks.LoggingTensorHook):
 
   def has_prefix(self, tensor_name):
     for prefix in self.prefixes:
-      if tensor_name.startswith(prefix):
+      #  if tensor_name.startswith(prefix):
+      if prefix in tensor_name:
         return True
     return False
 

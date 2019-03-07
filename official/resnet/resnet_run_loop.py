@@ -568,8 +568,7 @@ def resnet_main(
       # -----------------------------------------------------------------------#
       # add hooks
       from hooks import DumpingTensorHook
-      prefixes = ['Resnet', 'gradients', 'cross_entropy_probe', 'labels_probe',
-                  'image_after_preprocess_probe', 'label_after_preprocess_probe']
+      prefixes = ['probe']
       dhook = DumpingTensorHook(cycle_index, prefixes,
                                 exclude_keywords=['Assign', 'read', 'Initializer'])
       # -----------------------------------------------------------------------#
