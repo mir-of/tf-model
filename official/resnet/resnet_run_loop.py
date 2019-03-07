@@ -344,7 +344,8 @@ def resnet_model_fn(features, labels, mode, model_class,
   # Calculate loss, which includes softmax cross entropy and L2 regularization.
   cross_entropy = tf.losses.sparse_softmax_cross_entropy(
       logits=logits, labels=labels)
-  cross_entropy = debug.add_prob(cross_entropy, name='cross_entropy')
+  cross_entropy = debug.add_prob(cross_entropy, name='cross_entropy_probe')
+  labels = debug.add_prob(labels, name='labels_probe')
 
   # Create a tensor named cross_entropy for logging purposes.
   tf.identity(cross_entropy, name='cross_entropy')
@@ -559,18 +560,18 @@ def resnet_main(
     schedule = [flags_obj.epochs_between_evals for _ in range(int(n_loops))]
     schedule[-1] = flags_obj.train_epochs - sum(schedule[:-1])  # over counting.
 
-
+  # -----------------------------------------------------------------------#
+  # add hooks
+  from hooks import DumpingTensorHook
+  prefixes = ['Resnet', 'gradients', 'cross_entropy']
+  dhook = DumpingTensorHook(cycle_index, prefixes,
+                            exclude_keywords=['Assign', 'read', 'Initializer'])
+  # -----------------------------------------------------------------------#
   for cycle_index, num_train_epochs in enumerate(schedule):
     tf.logging.info('Starting cycle: %d/%d', cycle_index, int(n_loops))
 
     if num_train_epochs:
-      # -----------------------------------------------------------------------#
-      # add hooks
-      from hooks import DumpingTensorHook
-      prefixes = ['Resnet', 'gradients', 'cross_entropy']
-      dhook = DumpingTensorHook(cycle_index, prefixes,
-                                exclude_keywords=['Assign', 'read', 'Initializer'])
-      # -----------------------------------------------------------------------#
+
       classifier.train(input_fn=lambda: input_fn_train(num_train_epochs),
                        hooks=[dhook], max_steps=flags_obj.max_train_steps)
 
