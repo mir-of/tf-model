@@ -33,6 +33,8 @@ from __future__ import print_function
 
 import tensorflow as tf
 
+import debug
+
 _BATCH_NORM_DECAY = 0.997
 _BATCH_NORM_EPSILON = 1e-5
 DEFAULT_VERSION = 2
@@ -52,7 +54,8 @@ def batch_norm(inputs, training, data_format, name=None):
       inputs=inputs, axis=1 if data_format == 'channels_first' else 3,
       momentum=_BATCH_NORM_DECAY, epsilon=_BATCH_NORM_EPSILON, center=True,
       scale=True, training=training, fused=True, name=name)
-  print('{} shape: {}'.format(name, outputs.get_shape()))
+  # print('{} shape: {}'.format(name, outputs.get_shape()))
+  # outputs  = debug.add_prob(outputs, name=name)
   return outputs
 
 
@@ -95,7 +98,7 @@ def conv2d_fixed_padding(inputs, filters, kernel_size, strides, data_format, nam
       padding=('SAME' if strides == 1 else 'VALID'), use_bias=False,
       kernel_initializer=tf.variance_scaling_initializer(),
       data_format=data_format, name=name)
-  print('{} shape: {}'.format(name, outputs.get_shape()))
+  # print('{} shape: {}'.format(name, outputs.get_shape()))
   return outputs
 
 
@@ -501,11 +504,14 @@ class Model(object):
         # https://www.tensorflow.org/performance/performance_guide#data_formats
         inputs = tf.transpose(inputs, [0, 3, 1, 2])
 
+      print('input_img shape: {}'.format(inputs.get_shape()))
+      inputs = debug.add_prob(inputs, name='input_img')
+
       inputs = conv2d_fixed_padding(
           inputs=inputs, filters=self.num_filters, kernel_size=self.kernel_size,
           strides=self.conv_stride, data_format=self.data_format, name='conv1')
-      inputs = tf.identity(inputs, 'initial_conv')
       print('conv1 shape: {}'.format(inputs.get_shape()))
+      inputs = debug.add_prob(inputs, name='conv1')
 
       # We do not include batch normalization or activation functions in V2
       # for the initial conv1 because the first ResNet unit will perform these
@@ -520,8 +526,8 @@ class Model(object):
             inputs=inputs, pool_size=self.first_pool_size,
             strides=self.first_pool_stride, padding='SAME',
             data_format=self.data_format, name='pool1')
-        inputs = tf.identity(inputs, 'initial_max_pool')
         print('pool1 shape: {}'.format(inputs.get_shape()))
+        inputs = debug.add_prob(inputs, name='pool1')
 
       for i, num_blocks in enumerate(self.block_sizes):
         num_filters = self.num_filters * (2**i)
@@ -530,6 +536,8 @@ class Model(object):
             block_fn=self.block_fn, blocks=num_blocks,
             strides=self.block_strides[i], training=training,
             name='res{}'.format(i + 2), data_format=self.data_format)
+        print('{} shape: {}'.format('res{}'.format(i + 2), inputs.get_shape()))
+        inputs = debug.add_prob(inputs, name='res{}'.format(i + 2))
 
       # Only apply the BN and ReLU for model that does pre_activation in each
       # building/bottleneck block, eg resnet V2.
@@ -546,10 +554,11 @@ class Model(object):
       inputs = tf.reduce_mean(inputs, axes, keepdims=True, name='pool5')
       inputs = tf.identity(inputs, 'final_reduce_mean')
       print('pool5 shape: {}'.format(inputs.get_shape()))
+      inputs = debug.add_prob(inputs, name='pool5')
 
       inputs = tf.squeeze(inputs, axes)
       inputs = tf.layers.dense(inputs=inputs, kernel_initializer=tf.variance_scaling_initializer(),
                                units=self.num_classes, name='fc1001')
-      inputs = tf.identity(inputs, 'final_dense')
       print('fc1001 shape: {}'.format(inputs.get_shape()))
+      inputs = debug.add_prob(inputs, name='fc1001')
       return inputs
