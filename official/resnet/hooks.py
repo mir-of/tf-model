@@ -7,7 +7,8 @@ from tensorflow.python.training import basic_session_run_hooks
 import csv
 
 class DumpingTensorHook(basic_session_run_hooks.LoggingTensorHook):
-  def __init__(self, prefixes, output_dir="./probe_output", exclude_keywords=[]):
+  def __init__(self, cycle_index, prefixes, output_dir="./probe_output", exclude_keywords=[]):
+    self.cycle_index = cycle_index
     self.prefixes = prefixes
     self.output_dir = output_dir
     self.exclude_keywords = exclude_keywords
@@ -45,13 +46,13 @@ class DumpingTensorHook(basic_session_run_hooks.LoggingTensorHook):
       shutil.rmtree(self.output_dir)
     os.makedirs(os.path.join(self.output_dir))
 
-    if self._iter_count > 0:
+    if self.cycle_index > 0:
       return
-    if self._iter_count == 0:
+    if self.cycle_index == 0:
       with open(os.path.join(self.output_dir, 'tf_resnet_tensors.csv'), 'w') as f:
         writer = csv.writer(f, quoting=csv.QUOTE_MINIMAL)
         for k, v in tensor_values.items():
-          filepath = os.path.join(self.output_dir, 'iter_{}/{}'.format(self._iter_count, k))
+          filepath = os.path.join(self.output_dir, 'iter_{}/{}'.format(self.cycle_index, k))
           if not os.path.exists(os.path.dirname(filepath)):
             os.makedirs(os.path.dirname(filepath))
           np.save(filepath, v)

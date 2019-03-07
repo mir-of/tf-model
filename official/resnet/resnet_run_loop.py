@@ -568,7 +568,7 @@ def resnet_main(
       # add hooks
       from hooks import DumpingTensorHook
       prefixes = ['Resnet', 'gradients', 'cross_entropy']
-      dhook = DumpingTensorHook(prefixes,
+      dhook = DumpingTensorHook(cycle_index, prefixes,
                                 exclude_keywords=['Assign', 'read', 'Initializer'])
       # -----------------------------------------------------------------------#
       classifier.train(input_fn=lambda: input_fn_train(num_train_epochs),
