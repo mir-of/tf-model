@@ -4,6 +4,8 @@ import numpy as np
 import tensorflow as tf
 from tensorflow.python.training import basic_session_run_hooks
 
+import csv
+
 class DumpingTensorHook(basic_session_run_hooks.LoggingTensorHook):
   def __init__(self, prefixes, output_dir="./probe_output", exclude_keywords=[]):
     self.prefixes = prefixes
@@ -42,8 +44,15 @@ class DumpingTensorHook(basic_session_run_hooks.LoggingTensorHook):
     if os.path.isdir(self.output_dir):
       shutil.rmtree(self.output_dir)
     os.makedirs(os.path.join(self.output_dir))
-    for k, v in tensor_values.items():
-      filepath = os.path.join(self.output_dir, 'iter_{}/{}'.format(self._iter_count, k))
-      if not os.path.exists(os.path.dirname(filepath)):
-        os.makedirs(os.path.dirname(filepath))
-      np.save(filepath, v)
+
+    if self._iter_count > 0:
+      return
+    if self._iter_count == 0:
+      with open(os.path.join(self.output_dir, 'tf_resnet_tensors.csv'), 'w') as f:
+        writer = csv.writer(f, quoting=csv.QUOTE_MINIMAL)
+        for k, v in tensor_values.items():
+          filepath = os.path.join(self.output_dir, 'iter_{}/{}'.format(self._iter_count, k))
+          if not os.path.exists(os.path.dirname(filepath)):
+            os.makedirs(os.path.dirname(filepath))
+          np.save(filepath, v)
+          writer.writerow(['{}.npy'.format(filepath), v.shape])
