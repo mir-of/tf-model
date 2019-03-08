@@ -43,13 +43,10 @@ class DumpingTensorHook(basic_session_run_hooks.LoggingTensorHook):
     
   def _log_tensors(self, tensor_values):
     # tensor_values is a map
-    if self.cycle_index > 0:
-      return
-    if os.path.isdir(self.output_dir):
-      shutil.rmtree(self.output_dir)
-    os.makedirs(os.path.join(self.output_dir))
-
     if self.cycle_index == 0:
+      if os.path.isdir(self.output_dir):
+        shutil.rmtree(self.output_dir)
+      os.makedirs(os.path.join(self.output_dir))
       with open(os.path.join(self.output_dir, 'tf_resnet_tensors.csv'), 'w') as f:
         writer = csv.writer(f, quoting=csv.QUOTE_MINIMAL)
         for k, v in tensor_values.items():
