@@ -9,4 +9,5 @@ python imagenet_main.py \
 --data_dir=/home/qiaojing/tmp/dataset/tf_PNG1 \
 --pretrained_model_checkpoint_path=/home/qiaojing/tmp/resnet_model/tf_ckpt 
 
+
 #--data_dir=/home/qiaojing/tmp/dataset/tf_imagenet_224_5pic \
