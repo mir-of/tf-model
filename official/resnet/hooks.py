@@ -55,3 +55,9 @@ class DumpingTensorHook(basic_session_run_hooks.LoggingTensorHook):
             os.makedirs(os.path.dirname(filepath))
           np.save(filepath, v)
           writer.writerow(['{}.npy'.format(filepath), v.shape])
+    if self.cycle_index > 0:
+      for k, v in tensor_values.items():
+        filepath = os.path.join(self.output_dir, 'iter_{}/{}'.format(self.cycle_index, k))
+        if not os.path.exists(os.path.dirname(filepath)):
+          os.makedirs(os.path.dirname(filepath))
+        np.save(filepath, v)
