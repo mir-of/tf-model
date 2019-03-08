@@ -565,6 +565,8 @@ def resnet_main(
     tf.logging.info('Starting cycle: %d/%d', cycle_index, int(n_loops))
 
     if num_train_epochs:
+      print('num_train_epochs:{}'.format(num_train_epochs))
+      print('cycle_index:{}'.format(cycle_index))
       # -----------------------------------------------------------------------#
       # add hooks
       from hooks import DumpingTensorHook
