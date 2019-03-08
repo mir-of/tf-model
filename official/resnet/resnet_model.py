@@ -53,7 +53,7 @@ def batch_norm(inputs, training, data_format, name=None):
   outputs = tf.layers.batch_normalization(
       inputs=inputs, axis=1 if data_format == 'channels_first' else 3,
       momentum=_BATCH_NORM_DECAY, epsilon=_BATCH_NORM_EPSILON, center=True,
-      scale=True, training=training, fused=True, name=name)
+      scale=True, training=training, fused=False, name=name)
   # print('{} shape: {}'.format(name, outputs.get_shape()))
   # outputs  = debug.add_prob(outputs, name=name)
   return outputs
@@ -520,6 +520,7 @@ class Model(object):
       if self.resnet_version == 1:
         inputs = batch_norm(inputs, training, self.data_format, name='conv1_bn')
         inputs = tf.nn.relu(inputs)
+        inputs = debug.add_prob(inputs, name='conv1_bn')
 
       if self.first_pool_size:
         inputs = tf.layers.max_pooling2d(
