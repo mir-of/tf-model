@@ -637,6 +637,10 @@ def define_resnet_flags(resnet_size_choices=None):
       name='eval_only', default=False,
       help=flags_core.help_wrap('Skip training and only perform evaluation on '
                                 'the latest checkpoint.'))
+  flags.DEFINE_float(
+    name='weight_decay', default=0.0,
+    help=flags_core.help_wrap('Weight decay param.'))
+
   flags.DEFINE_boolean(
       name='image_bytes_as_serving_input', default=False,
       help=flags_core.help_wrap(
