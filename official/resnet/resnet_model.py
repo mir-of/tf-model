@@ -228,25 +228,25 @@ def _bottleneck_block_v1(inputs, filters, training, projection_shortcut,
 
   if projection_shortcut is not None:
     shortcut = projection_shortcut(inputs, name=name+'_branch1')
-    shortcut = batch_norm(inputs=shortcut, training=training,
-                          data_format=data_format, name=name+'_branch1_bn')
+    # shortcut = batch_norm(inputs=shortcut, training=training,
+    #                       data_format=data_format, name=name+'_branch1_bn')
 
   inputs = conv2d_fixed_padding(
       inputs=inputs, filters=filters, kernel_size=1, strides=1,
       data_format=data_format, name=name+'_branch2a')
-  inputs = batch_norm(inputs, training, data_format, name=name+'_branch2a_bn')
-  inputs = tf.nn.relu(inputs)
+  # inputs = batch_norm(inputs, training, data_format, name=name+'_branch2a_bn')
+  # inputs = tf.nn.relu(inputs)
 
   inputs = conv2d_fixed_padding(
       inputs=inputs, filters=filters, kernel_size=3, strides=strides,
       data_format=data_format, name=name+'_branch2b')
-  inputs = batch_norm(inputs, training, data_format, name=name+'_branch2b_bn')
-  inputs = tf.nn.relu(inputs)
+  # inputs = batch_norm(inputs, training, data_format, name=name+'_branch2b_bn')
+  # inputs = tf.nn.relu(inputs)
 
   inputs = conv2d_fixed_padding(
       inputs=inputs, filters=4 * filters, kernel_size=1, strides=1,
       data_format=data_format, name=name+'_branch2c')
-  inputs = batch_norm(inputs, training, data_format, name=name+'_branch2c_bn')
+  # inputs = batch_norm(inputs, training, data_format, name=name+'_branch2c_bn')
   inputs += shortcut
   inputs = tf.nn.relu(inputs)
 
@@ -518,15 +518,22 @@ class Model(object):
       # for both the shortcut and non-shortcut paths as part of the first
       # block's projection. Cf. Appendix of [2].
       if self.resnet_version == 1:
-        inputs = batch_norm(inputs, training, self.data_format, name='conv1_bn')
-        inputs = tf.nn.relu(inputs)
+        # inputs = batch_norm(inputs, training, self.data_format, name='conv1_bn')
+        # inputs = tf.nn.relu(inputs)
         inputs = debug.add_prob(inputs, name='conv1_bn')
 
       if self.first_pool_size:
-        inputs = tf.layers.max_pooling2d(
-            inputs=inputs, pool_size=self.first_pool_size,
-            strides=self.first_pool_stride, padding='SAME',
-            data_format=self.data_format, name='pool1')
+        # inputs = tf.layers.max_pooling2d(
+        #     inputs=inputs, pool_size=self.first_pool_size,
+        #     strides=self.first_pool_stride, padding='SAME',
+        #     data_format=self.data_format, name='pool1')
+        #
+        # inputs = tf.layers.average_pooling2d(
+        #   inputs=inputs, pool_size=self.first_pool_size,
+        #   strides=self.first_pool_stride, padding='SAME',
+        #   data_format=self.data_format, name='pool1')
+
+
         print('pool1 shape: {}'.format(inputs.get_shape()))
         inputs = debug.add_prob(inputs, name='pool1')
 
