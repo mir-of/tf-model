@@ -528,11 +528,10 @@ class Model(object):
         #     strides=self.first_pool_stride, padding='SAME',
         #     data_format=self.data_format, name='pool1')
         #
-        # inputs = tf.layers.average_pooling2d(
-        #   inputs=inputs, pool_size=self.first_pool_size,
-        #   strides=self.first_pool_stride, padding='SAME',
-        #   data_format=self.data_format, name='pool1')
-
+        inputs = tf.layers.average_pooling2d(
+          inputs=inputs, pool_size=self.first_pool_size,
+          strides=self.first_pool_stride, padding='SAME',
+          data_format=self.data_format, name='pool1')
 
         print('pool1 shape: {}'.format(inputs.get_shape()))
         inputs = debug.add_prob(inputs, name='pool1')
