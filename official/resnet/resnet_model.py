@@ -238,7 +238,7 @@ def _bottleneck_block_v1(inputs, filters, training, projection_shortcut,
   # inputs = tf.nn.relu(inputs)
 
   inputs = conv2d_fixed_padding(
-      inputs=inputs, filters=filters, kernel_size=3, strides=strides,
+      inputs=inputs, filters=filters, kernel_size=1, strides=strides,
       data_format=data_format, name=name+'_branch2b')
   # inputs = batch_norm(inputs, training, data_format, name=name+'_branch2b_bn')
   # inputs = tf.nn.relu(inputs)
