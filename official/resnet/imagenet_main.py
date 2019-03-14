@@ -32,7 +32,7 @@ from official.resnet import resnet_run_loop
 
 import debug
 
-_DEFAULT_IMAGE_SIZE = 228
+_DEFAULT_IMAGE_SIZE = 290
 _NUM_CHANNELS = 3
 _NUM_CLASSES = 1001
 
