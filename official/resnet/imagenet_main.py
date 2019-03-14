@@ -32,13 +32,13 @@ from official.resnet import resnet_run_loop
 
 import debug
 
-_DEFAULT_IMAGE_SIZE = 224
+_DEFAULT_IMAGE_SIZE = 228
 _NUM_CHANNELS = 3
 _NUM_CLASSES = 1001
 
 _NUM_IMAGES = {
-    'train': 5,
-    'validation': 5,
+    'train': 1,
+    'validation': 1,
 }
 
 _NUM_TRAIN_FILES = 1

@@ -6,7 +6,7 @@ python imagenet_main.py \
 --weight_decay=0 \
 --batch_size=1 \
 --train_epochs=5 \
---data_dir=/home/qiaojing/tmp/dataset/tf_PNG1 \
+--data_dir=/home/qiaojing/tmp/dataset/PNG228/tf_record \
 --pretrained_model_checkpoint_path=/home/qiaojing/tmp/resnet_model/tf_ckpt 
 
 
