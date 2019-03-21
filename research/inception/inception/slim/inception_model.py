@@ -90,42 +90,49 @@ def inception_v3(inputs,
         # 299 x 299 x 3
         inputs = ops.conv2d(inputs, 32, [3, 3], stride=2,
                                          scope='conv0')
+        end_points['conv0'] = inputs
         inputs = debug.add_prob(inputs, name='conv0')
         print('conv0 shape: {}'.format(inputs.get_shape()))
 
         # 149 x 149 x 32
         inputs = ops.conv2d(inputs, 32, [3, 3],
                                          scope='conv1')
+        end_points['conv1'] = inputs
         inputs = debug.add_prob(inputs, name='conv1')
         print('conv1 shape: {}'.format(inputs.get_shape()))
 
         # 147 x 147 x 32
         inputs = ops.conv2d(inputs, 64, [3, 3],
                                          padding='SAME', scope='conv2')
+        end_points['conv2'] = inputs
         inputs = debug.add_prob(inputs, name='conv2')
         print('conv2 shape: {}'.format(inputs.get_shape()))
 
         # 147 x 147 x 64
         inputs = ops.max_pool(inputs, [3, 3],
                                            stride=2, scope='pool1')
+        end_points['pool1'] = inputs
         inputs = debug.add_prob(inputs, name='pool1')
         print('pool1 shape: {}'.format(inputs.get_shape()))
 
         # 73 x 73 x 64
         inputs = ops.conv2d(inputs, 80, [1, 1],
                                          scope='conv3')
+        end_points['conv3'] = inputs
         inputs = debug.add_prob(inputs, name='conv3')
         print('conv3 shape: {}'.format(inputs.get_shape()))
 
         # 73 x 73 x 80.
         inputs = ops.conv2d(inputs, 192, [3, 3],
                                          scope='conv4')
+        end_points['conv4'] = inputs
         inputs = debug.add_prob(inputs, name='conv4')
         print('conv4 shape: {}'.format(inputs.get_shape()))
 
         # 71 x 71 x 192.
         inputs = ops.max_pool(inputs, [3, 3],
                                            stride=2, scope='pool2')
+        end_points['pool2'] = inputs
         inputs = debug.add_prob(inputs, name='pool2')
         print('pool2 shape: {}'.format(inputs.get_shape()))
 
