@@ -327,8 +327,8 @@ def image_preprocessing(image_buffer, bbox, train, thread_id=0):
   width = FLAGS.image_size
 
   if train:
-    # image = distort_image(image, height, width, bbox, thread_id)
-    image = image.set_shape([height, width, 3])
+    #image = distort_image(image, height, width, bbox, thread_id)
+    image.set_shape([height, width, 3])
   else:
     image = eval_image(image, height, width)
 
@@ -559,7 +559,7 @@ def batch_inputs(dataset, batch_size, train, num_preprocess_threads=None,
     images_and_labels = []
     for thread_id in range(num_preprocess_threads):
       # Parse a serialized Example proto to extract the image and metadata.
-      image_buffer, label_index, bbox, _ = parse_example_proto(
+      image_buffer, label_index, bbox = parse_example_proto(
           example_serialized)
       image = image_preprocessing(image_buffer, bbox, train, thread_id)
       images_and_labels.append([image, label_index])
