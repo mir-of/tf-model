@@ -90,9 +90,10 @@ def inference(images, num_classes, for_training=False, restore_logits=True,
   _activation_summaries(endpoints)
 
   # Grab the logits associated with the side head. Employed during training.
-  auxiliary_logits = endpoints['aux_logits']
+  # auxiliary_logits = endpoints['aux_logits']
 
-  return logits, auxiliary_logits
+  # return logits, auxiliary_logits
+  return logits
 
 
 def loss(logits, labels, batch_size=None):
