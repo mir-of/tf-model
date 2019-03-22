@@ -90,10 +90,9 @@ def inference(images, num_classes, for_training=False, restore_logits=True,
   _activation_summaries(endpoints)
 
   # Grab the logits associated with the side head. Employed during training.
-  # auxiliary_logits = endpoints['aux_logits']
+  auxiliary_logits = endpoints['aux_logits']
 
-  # return logits, auxiliary_logits
-  return logits
+  return logits, auxiliary_logits
 
 
 def loss(logits, labels, batch_size=None):
@@ -129,11 +128,11 @@ def loss(logits, labels, batch_size=None):
                                  weight=1.0)
 
   # Cross entropy loss for the auxiliary softmax head.
-  slim.losses.cross_entropy_loss(logits[1],
-                                 dense_labels,
-                                 label_smoothing=0.1,
-                                 weight=0.4,
-                                 scope='aux_loss')
+  # slim.losses.cross_entropy_loss(logits[1],
+  #                                dense_labels,
+  #                                label_smoothing=0.1,
+  #                                weight=0.4,
+  #                                scope='aux_loss')
 
 
 def _activation_summary(x):

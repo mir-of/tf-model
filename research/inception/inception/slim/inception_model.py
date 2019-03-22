@@ -313,7 +313,7 @@ def inception_v3(inputs,
         print('mixed_7 shape: {}'.format(net.get_shape()))
 
         # Auxiliary Head logits
-        # aux_logits = tf.identity(end_points['mixed_7'])
+        aux_logits = tf.identity(end_points['mixed_7'])
         # with tf.variable_scope('aux_logits'):
         #   aux_logits = ops.avg_pool(aux_logits, [5, 5], stride=3,
         #                             padding='VALID')
@@ -325,7 +325,7 @@ def inception_v3(inputs,
         #   aux_logits = ops.flatten(aux_logits)
         #   aux_logits = ops.fc(aux_logits, num_classes, activation=None,
         #                       stddev=0.001, restore=restore_logits)
-        #   end_points['aux_logits'] = aux_logits
+        end_points['aux_logits'] = aux_logits
 
         # mixed_8: 8 x 8 x 1280.
         # Note that the scope below is not changed to not void previous
