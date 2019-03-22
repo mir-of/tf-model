@@ -400,17 +400,14 @@ def inception_v3(inputs,
           net = ops.avg_pool(net, shape[1:3], padding='VALID', scope='pool')
           # 1 x 1 x 2048
           net = ops.dropout(net, dropout_keep_prob, scope='dropout')
-          net = ops.flatten(net, scope='fc1')
+          net = ops.flatten(net, scope='flatten')
+
+          # 2048
+          logits = ops.fc(net, num_classes, activation=None, scope='fc1',
+                          restore=restore_logits)
 
           net = debug.add_prob(net, name='fc1')
           print('fc1 shape: {}'.format(net.get_shape()))
-
-          # 2048
-          logits = ops.fc(net, num_classes, activation=None, scope='fc2',
-                          restore=restore_logits)
-
-          net = debug.add_prob(net, name='fc2')
-          print('fc2 shape: {}'.format(net.get_shape()))
 
           # 1000
           end_points['logits'] = logits
