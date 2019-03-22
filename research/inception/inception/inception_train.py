@@ -31,6 +31,8 @@ from inception import image_processing
 from inception import inception_model as inception
 from inception.slim import slim
 
+import debug
+
 FLAGS = tf.app.flags.FLAGS
 
 tf.app.flags.DEFINE_string('train_dir', '/tmp/imagenet_train',
@@ -335,12 +337,31 @@ def train(dataset):
         FLAGS.train_dir,
         graph=sess.graph)
 
+    # --------------------------------------------------------------- #
+    # Get prob tensors
+    probe_list = []
+    all_ops = tf.get_default_graph().get_operations()
+
+    for op in all_ops:
+      tensors = op.outputs
+      for t in tensors:
+        if 'probe' in t.name:
+          # print(t.name)
+          probe_list.append(t)
+    # --------------------------------------------------------------- #
+
     for step in range(FLAGS.max_steps):
       start_time = time.time()
-      _, loss_value = sess.run([train_op, loss])
+      res = sess.run([train_op, loss, probe_list])
       duration = time.time() - start_time
 
+      _, loss_value = res[0], res[1]
       assert not np.isnan(loss_value), 'Model diverged with loss = NaN'
+
+      assert len(probe_list) == len(res[2:])
+      probe_tensor = zip(probe_list, res[2:])
+      debug.tensor_hook(probe_tensor, 'probe_output/step_{}'.format(step))
+
 
       if step % 1 == 0:
         examples_per_sec = FLAGS.batch_size / float(duration)
