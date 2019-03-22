@@ -352,12 +352,13 @@ def train(dataset):
 
     for step in range(FLAGS.max_steps):
       start_time = time.time()
-      res = sess.run([train_op, loss, probe_list])
+      res = sess.run([train_op, loss] + probe_list)
       duration = time.time() - start_time
 
       _, loss_value = res[0], res[1]
       assert not np.isnan(loss_value), 'Model diverged with loss = NaN'
 
+      print("len res: {}, len problist: {}".format(len(res), len(probe_list)))
       assert len(probe_list) == len(res[2:])
       probe_tensor = zip(probe_list, res[2:])
       debug.tensor_hook(probe_tensor, 'probe_output/step_{}'.format(step))
