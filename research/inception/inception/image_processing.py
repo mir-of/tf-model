@@ -377,10 +377,10 @@ def image_preprocessing(image_buffer, bbox, train, thread_id=0):
     image = eval_image(image, height, width)
 
   # Finally, rescale to [-1,1] instead of [0, 1)
-  # image = tf.subtract(image, 0.5)
-  # image = tf.multiply(image, 2.0)
+  image = tf.subtract(image, 0.5)
+  image = tf.multiply(image, 2.0)
 
-  return mean_image_subtraction(image, _CHANNEL_MEANS, 3)
+  return image
 
 
 # def parse_example_proto(example_serialized):
