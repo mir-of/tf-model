@@ -39,7 +39,7 @@ TOWER_NAME = 'tower'
 
 # Batch normalization. Constant governing the exponential moving average of
 # the 'global' mean and variance for all activations.
-BATCHNORM_MOVING_AVERAGE_DECAY = 0.9997
+BATCHNORM_MOVING_AVERAGE_DECAY = 0.99
 
 # The decay to use for the moving average.
 MOVING_AVERAGE_DECAY = 0.9999
@@ -77,7 +77,7 @@ def inference(images, num_classes, for_training=False, restore_logits=True,
     with slim.arg_scope([slim.ops.conv2d],
                         stddev=0.1,
                         activation=tf.nn.relu,
-                        batch_norm_params=None):
+                        batch_norm_params=batch_norm_params):
       logits, endpoints = slim.inception.inception_v3(
           images,
           dropout_keep_prob=1,
