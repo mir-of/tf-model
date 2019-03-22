@@ -42,6 +42,12 @@ from __future__ import print_function
 
 import tensorflow as tf
 
+
+_R_MEAN = 123.68
+_G_MEAN = 116.78
+_B_MEAN = 103.94
+_CHANNEL_MEANS = [_R_MEAN, _G_MEAN, _B_MEAN]
+
 FLAGS = tf.app.flags.FLAGS
 
 tf.app.flags.DEFINE_integer('batch_size', 32,
@@ -301,6 +307,41 @@ def eval_image(image, height, width, scope=None):
     return image
 
 
+
+def mean_image_subtraction(image, means, num_channels):
+  """Subtracts the given means from each image channel.
+
+  For example:
+    means = [123.68, 116.779, 103.939]
+    image = _mean_image_subtraction(image, means)
+
+  Note that the rank of `image` must be known.
+
+  Args:
+    image: a tensor of size [height, width, C].
+    means: a C-vector of values to subtract from each channel.
+    num_channels: number of color channels in the image that will be distorted.
+
+  Returns:
+    the centered image.
+
+  Raises:
+    ValueError: If the rank of `image` is unknown, if `image` has a rank other
+      than three or if the number of channels in `image` doesn't match the
+      number of values in `means`.
+  """
+  if image.get_shape().ndims != 3:
+    raise ValueError('Input must be of size [height, width, C>0]')
+
+  if len(means) != num_channels:
+    raise ValueError('len(means) must match the number of channels')
+
+  # We have a 1-D tensor of means; convert to 3-D.
+  means = tf.expand_dims(tf.expand_dims(means, 0), 0)
+
+  return image - means
+
+
 def image_preprocessing(image_buffer, bbox, train, thread_id=0):
   """Decode and preprocess one image for evaluation or training.
 
@@ -327,15 +368,16 @@ def image_preprocessing(image_buffer, bbox, train, thread_id=0):
   width = FLAGS.image_size
 
   if train:
-    image = distort_image(image, height, width, bbox, thread_id)
-    # image.set_shape([height, width, 3])
+    # image = distort_image(image, height, width, bbox, thread_id)
+    image.set_shape([height, width, 3])
   else:
     image = eval_image(image, height, width)
 
   # Finally, rescale to [-1,1] instead of [0, 1)
-  image = tf.subtract(image, 0.5)
-  image = tf.multiply(image, 2.0)
-  return image
+  # image = tf.subtract(image, 0.5)
+  # image = tf.multiply(image, 2.0)
+
+  return mean_image_subtraction(image, _CHANNEL_MEANS, 3)
 
 
 # def parse_example_proto(example_serialized):
