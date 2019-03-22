@@ -158,7 +158,10 @@ def decode_jpeg(image_buffer, scope=None):
     # Note that the resulting image contains an unknown height and width
     # that is set dynamically by decode_jpeg. In other words, the height
     # and width of image is unknown at compile-time.
-    image = tf.image.decode_jpeg(image_buffer, channels=3)
+    # image = tf.image.decode_jpeg(image_buffer, channels=3)
+    image = tf.image.decode_png(image_buffer, channels=3)
+
+
 
     # After this point, all image pixels reside in [0,1)
     # until the very end, when they're rescaled to (-1, 1).  The various
