@@ -158,8 +158,7 @@ def decode_jpeg(image_buffer, scope=None):
     # Note that the resulting image contains an unknown height and width
     # that is set dynamically by decode_jpeg. In other words, the height
     # and width of image is unknown at compile-time.
-    # image = tf.image.decode_jpeg(image_buffer, channels=3)
-    image = tf.image.decode_image(image_buffer, channels=3)
+    image = tf.image.decode_jpeg(image_buffer, channels=3)
 
     # After this point, all image pixels reside in [0,1)
     # until the very end, when they're rescaled to (-1, 1).  The various
@@ -167,6 +166,21 @@ def decode_jpeg(image_buffer, scope=None):
     image = tf.image.convert_image_dtype(image, dtype=tf.float32)
     return image
 
+
+def decode_image(image_buffer, scope=None):
+  """Decode a JPEG string into one 3-D float image Tensor.
+
+  Args:
+    image_buffer: scalar string Tensor.
+    scope: Optional scope for name_scope.
+  Returns:
+    3-D float Tensor.
+  """
+  with tf.name_scope(values=[image_buffer], name=scope,
+                     default_name='decode_image'):
+    # Decode the string as an RGB.
+    image = tf.image.decode_image(image_buffer, channels=3)
+    return image
 
 def distort_color(image, thread_id=0, scope=None):
   """Distort the color of the image.
@@ -363,7 +377,8 @@ def image_preprocessing(image_buffer, bbox, train, thread_id=0):
   if bbox is None:
     raise ValueError('Please supply a bounding box.')
 
-  image = decode_jpeg(image_buffer)
+  image = decode_image(image_buffer)
+  image = tf.to_float(image)
 
   height = FLAGS.image_size
   width = FLAGS.image_size
