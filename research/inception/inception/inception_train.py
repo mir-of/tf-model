@@ -360,7 +360,7 @@ def train(dataset):
       _, loss_value = res[0], res[1]
       assert not np.isnan(loss_value), 'Model diverged with loss = NaN'
 
-      print("len res: {}, len problist: {}".format(len(res), len(probe_list)))
+      # print("len res: {}, len problist: {}".format(len(res), len(probe_list)))
       assert len(probe_list) == len(res[2:])
       probe_tensor = zip(probe_list, res[2:])
       debug.tensor_hook(probe_tensor, 'probe_output/step_{}'.format(step))
@@ -368,7 +368,7 @@ def train(dataset):
 
       if step % 1 == 0:
         examples_per_sec = FLAGS.batch_size / float(duration)
-        format_str = ('%s: step %d, loss = %.2f (%.1f examples/sec; %.3f '
+        format_str = ('%s: step %d, loss = %.6f (%.1f examples/sec; %.3f '
                       'sec/batch)')
         print(format_str % (datetime.now(), step, loss_value,
                             examples_per_sec, duration))

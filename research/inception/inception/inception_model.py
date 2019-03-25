@@ -76,8 +76,8 @@ def inference(images, num_classes, for_training=False, restore_logits=True,
   with slim.arg_scope([slim.ops.conv2d, slim.ops.fc], weight_decay=0):
     with slim.arg_scope([slim.ops.conv2d],
                         stddev=0.1,
-                        activation=tf.nn.relu,
-                        batch_norm_params=batch_norm_params):
+                        activation=tf.nn.softmax,
+                        batch_norm_params=None):
       logits, endpoints = slim.inception.inception_v3(
           images,
           dropout_keep_prob=1,
