@@ -407,7 +407,7 @@ def inception_v3(inputs,
                           restore=restore_logits)
 
           logits = debug.add_prob(logits, name='fc1')
-          print('fc1 shape: {}'.format(net.get_shape()))
+          print('fc1 shape: {}'.format(logits.get_shape()))
 
           # 1000
           end_points['logits'] = logits
