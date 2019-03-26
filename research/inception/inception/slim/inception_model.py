@@ -406,7 +406,7 @@ def inception_v3(inputs,
           logits = ops.fc(net, num_classes, activation=None, scope='fc1',
                           restore=restore_logits)
 
-          net = debug.add_prob(net, name='fc1')
+          logits = debug.add_prob(logits, name='fc1')
           print('fc1 shape: {}'.format(net.get_shape()))
 
           # 1000
