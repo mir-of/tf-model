@@ -76,7 +76,7 @@ def inference(images, num_classes, for_training=False, restore_logits=True,
   with slim.arg_scope([slim.ops.conv2d, slim.ops.fc], weight_decay=0):
     with slim.arg_scope([slim.ops.conv2d],
                         stddev=0.1,
-                        activation=tf.nn.softmax,
+                        activation=tf.nn.sigmoid,
                         batch_norm_params=None):
       logits, endpoints = slim.inception.inception_v3(
           images,
@@ -124,7 +124,7 @@ def loss(logits, labels, batch_size=None):
   # Cross entropy loss for the main softmax prediction.
   slim.losses.cross_entropy_loss(logits[0],
                                  dense_labels,
-                                 label_smoothing=0.1,
+                                 label_smoothing=0,
                                  weight=1.0)
 
   # Cross entropy loss for the auxiliary softmax head.
