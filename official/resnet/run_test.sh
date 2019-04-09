@@ -6,8 +6,8 @@ python imagenet_main.py \
 --weight_decay=0 \
 --batch_size=1 \
 --train_epochs=5 \
---pretrained_model_checkpoint_path=/home/qiaojing/tmp/resnet_model/png_290_model/tf_model \
---data_dir=/home/qiaojing/tmp/dataset/PNG290/tf_record 
+--pretrained_model_checkpoint_path=/home/qiaojing/dev/cnns_test/resnet/models/tf_model \
+--data_dir=/home/qiaojing/dev/cnns_test/dataset/PNG228/tf_record 
 
 
 #--pretrained_model_checkpoint_path=/home/qiaojing/tmp/resnet_model/tf_ckpt

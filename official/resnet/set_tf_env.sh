@@ -1,3 +1,3 @@
 unset PYTHONPATH
-export PYTHONPATH=$PYTHONPATH:/home/qiaojing/git-repo/tf_model/models
+export PYTHONPATH=$PYTHONPATH:../../
 source ~/virtualenvs/facenet/bin/activate
