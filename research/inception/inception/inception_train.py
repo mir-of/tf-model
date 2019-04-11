@@ -348,7 +348,7 @@ def train(dataset):
       tensors = op.outputs
       for t in tensors:
         if 'probe' in t.name:
-          # print(t.name)
+          print("probes: {}, {}".format(t.name, t.shape))
           probe_list.append(t)
     # --------------------------------------------------------------- #
 
@@ -363,7 +363,7 @@ def train(dataset):
       # print("len res: {}, len problist: {}".format(len(res), len(probe_list)))
       assert len(probe_list) == len(res[2:])
       probe_tensor = zip(probe_list, res[2:])
-      debug.tensor_hook(probe_tensor, 'probe_output/step_{}'.format(step))
+      debug.tensor_hook(probe_tensor, 'tf_probe/iter_{}'.format(step))
 
 
       if step % 1 == 0:
