@@ -398,6 +398,8 @@ def inception_v3(inputs,
         with tf.variable_scope('logits'):
           shape = net.get_shape()
           net = ops.avg_pool(net, shape[1:3], padding='VALID', scope='pool')
+          net = debug.add_prob(net, name='pool3')
+          print('pool3 shape: {}'.format(net.get_shape()))
           # 1 x 1 x 2048
           net = ops.dropout(net, dropout_keep_prob, scope='dropout')
           net = ops.flatten(net, scope='flatten')

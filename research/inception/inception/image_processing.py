@@ -77,6 +77,40 @@ tf.app.flags.DEFINE_integer('input_queue_memory_factor', 16,
                             """comments in code for more details.""")
 
 
+def _mean_image_subtraction(image, means, num_channels):
+  """Subtracts the given means from each image channel.
+
+  For example:
+    means = [123.68, 116.779, 103.939]
+    image = _mean_image_subtraction(image, means)
+
+  Note that the rank of `image` must be known.
+
+  Args:
+    image: a tensor of size [height, width, C].
+    means: a C-vector of values to subtract from each channel.
+    num_channels: number of color channels in the image that will be distorted.
+
+  Returns:
+    the centered image.
+
+  Raises:
+    ValueError: If the rank of `image` is unknown, if `image` has a rank other
+      than three or if the number of channels in `image` doesn't match the
+      number of values in `means`.
+  """
+  if image.get_shape().ndims != 3:
+    raise ValueError('Input must be of size [height, width, C>0]')
+
+  if len(means) != num_channels:
+    raise ValueError('len(means) must match the number of channels')
+
+  # We have a 1-D tensor of means; convert to 3-D.
+  means = tf.expand_dims(tf.expand_dims(means, 0), 0)
+
+  return image - means
+
+
 def inputs(dataset, batch_size=None, num_preprocess_threads=None):
   """Generate batches of ImageNet images for evaluation.
 
@@ -393,7 +427,8 @@ def image_preprocessing(image_buffer, bbox, train, thread_id=0):
   # image = tf.subtract(image, 0.5)
   # image = tf.multiply(image, 2.0)
 
-  return image
+  return _mean_image_subtraction(image, _CHANNEL_MEANS, 3)
+  #return image
 
 
 # def parse_example_proto(example_serialized):
