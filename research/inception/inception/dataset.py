@@ -81,14 +81,14 @@ class Dataset(object):
     Raises:
       ValueError: if there are not data_files matching the subset.
     """
-    tf_record_pattern = os.path.join(FLAGS.data_dir, '%s-*' % self.subset)
+    tf_record_pattern = os.path.join(FLAGS.data_dir, '%s-*' % "part")
     data_files = tf.gfile.Glob(tf_record_pattern)
     if not data_files:
       print('No files found for dataset %s/%s at %s' % (self.name,
                                                         self.subset,
                                                         FLAGS.data_dir))
 
-      self.download_message()
+      # self.download_message()
       exit(-1)
     return data_files
 

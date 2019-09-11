@@ -31,6 +31,8 @@ from inception import image_processing
 from inception import inception_model as inception
 from inception.slim import slim
 
+import debug
+
 FLAGS = tf.app.flags.FLAGS
 
 tf.app.flags.DEFINE_string('train_dir', '/tmp/imagenet_train',
@@ -193,16 +195,18 @@ def train(dataset):
     decay_steps = int(num_batches_per_epoch * FLAGS.num_epochs_per_decay)
 
     # Decay the learning rate exponentially based on the number of steps.
-    lr = tf.train.exponential_decay(FLAGS.initial_learning_rate,
-                                    global_step,
-                                    decay_steps,
-                                    FLAGS.learning_rate_decay_factor,
-                                    staircase=True)
+    # lr = tf.train.exponential_decay(FLAGS.initial_learning_rate,
+    #                                 global_step,
+    #                                 decay_steps,
+    #                                 FLAGS.learning_rate_decay_factor,
+    #                                 staircase=True)
+    lr = FLAGS.initial_learning_rate
 
     # Create an optimizer that performs gradient descent.
-    opt = tf.train.RMSPropOptimizer(lr, RMSPROP_DECAY,
-                                    momentum=RMSPROP_MOMENTUM,
-                                    epsilon=RMSPROP_EPSILON)
+    # opt = tf.train.RMSPropOptimizer(lr, RMSPROP_DECAY,
+    #                                 momentum=RMSPROP_MOMENTUM,
+    #                                 epsilon=RMSPROP_EPSILON)
+    opt = tf.train.GradientDescentOptimizer(lr)
 
     # Get images and labels for ImageNet and split the batch across GPUs.
     assert FLAGS.batch_size % FLAGS.num_gpus == 0, (
@@ -322,7 +326,9 @@ def train(dataset):
       variables_to_restore = tf.get_collection(
           slim.variables.VARIABLES_TO_RESTORE)
       restorer = tf.train.Saver(variables_to_restore)
-      restorer.restore(sess, FLAGS.pretrained_model_checkpoint_path)
+      # restorer.restore(sess, FLAGS.pretrained_model_checkpoint_path)
+      restorer.restore(sess, tf.train.latest_checkpoint(FLAGS.pretrained_model_checkpoint_path))
+
       print('%s: Pre-trained model restored from %s' %
             (datetime.now(), FLAGS.pretrained_model_checkpoint_path))
 
@@ -333,25 +339,45 @@ def train(dataset):
         FLAGS.train_dir,
         graph=sess.graph)
 
+    # --------------------------------------------------------------- #
+    # Get prob tensors
+    probe_list = []
+    all_ops = tf.get_default_graph().get_operations()
+
+    for op in all_ops:
+      tensors = op.outputs
+      for t in tensors:
+        if 'probe' in t.name:
+          print("probes: {}, {}".format(t.name, t.shape))
+          probe_list.append(t)
+    # --------------------------------------------------------------- #
+
     for step in range(FLAGS.max_steps):
       start_time = time.time()
-      _, loss_value = sess.run([train_op, loss])
+      res = sess.run([train_op, loss] + probe_list)
       duration = time.time() - start_time
 
+      _, loss_value = res[0], res[1]
       assert not np.isnan(loss_value), 'Model diverged with loss = NaN'
 
-      if step % 10 == 0:
+      # print("len res: {}, len problist: {}".format(len(res), len(probe_list)))
+      assert len(probe_list) == len(res[2:])
+      probe_tensor = zip(probe_list, res[2:])
+      debug.tensor_hook(probe_tensor, 'tf_probe/iter_{}'.format(step))
+
+
+      if step % 1 == 0:
         examples_per_sec = FLAGS.batch_size / float(duration)
-        format_str = ('%s: step %d, loss = %.2f (%.1f examples/sec; %.3f '
+        format_str = ('%s: step %d, loss = %.6f (%.1f examples/sec; %.3f '
                       'sec/batch)')
         print(format_str % (datetime.now(), step, loss_value,
                             examples_per_sec, duration))
 
-      if step % 100 == 0:
+      if step % 1 == 0:
         summary_str = sess.run(summary_op)
         summary_writer.add_summary(summary_str, step)
 
       # Save the model checkpoint periodically.
-      if step % 5000 == 0 or (step + 1) == FLAGS.max_steps:
+      if step % 1 == 0 or (step + 1) == FLAGS.max_steps:
         checkpoint_path = os.path.join(FLAGS.train_dir, 'model.ckpt')
         saver.save(sess, checkpoint_path, global_step=step)

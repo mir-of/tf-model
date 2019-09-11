@@ -39,7 +39,7 @@ TOWER_NAME = 'tower'
 
 # Batch normalization. Constant governing the exponential moving average of
 # the 'global' mean and variance for all activations.
-BATCHNORM_MOVING_AVERAGE_DECAY = 0.9997
+BATCHNORM_MOVING_AVERAGE_DECAY = 0.99
 
 # The decay to use for the moving average.
 MOVING_AVERAGE_DECAY = 0.9999
@@ -73,21 +73,21 @@ def inference(images, num_classes, for_training=False, restore_logits=True,
       'epsilon': 0.001,
   }
   # Set weight_decay for weights in Conv and FC layers.
-  with slim.arg_scope([slim.ops.conv2d, slim.ops.fc], weight_decay=0.00004):
+  with slim.arg_scope([slim.ops.conv2d, slim.ops.fc], weight_decay=0):
     with slim.arg_scope([slim.ops.conv2d],
                         stddev=0.1,
-                        activation=tf.nn.relu,
-                        batch_norm_params=batch_norm_params):
+                        activation=tf.nn.sigmoid,
+                        batch_norm_params=None):
       logits, endpoints = slim.inception.inception_v3(
           images,
-          dropout_keep_prob=0.8,
+          dropout_keep_prob=1,
           num_classes=num_classes,
           is_training=for_training,
           restore_logits=restore_logits,
           scope=scope)
 
   # Add summaries for viewing model statistics on TensorBoard.
-  _activation_summaries(endpoints)
+  # _activation_summaries(endpoints)
 
   # Grab the logits associated with the side head. Employed during training.
   auxiliary_logits = endpoints['aux_logits']
@@ -124,15 +124,15 @@ def loss(logits, labels, batch_size=None):
   # Cross entropy loss for the main softmax prediction.
   slim.losses.cross_entropy_loss(logits[0],
                                  dense_labels,
-                                 label_smoothing=0.1,
+                                 label_smoothing=0,
                                  weight=1.0)
 
   # Cross entropy loss for the auxiliary softmax head.
-  slim.losses.cross_entropy_loss(logits[1],
-                                 dense_labels,
-                                 label_smoothing=0.1,
-                                 weight=0.4,
-                                 scope='aux_loss')
+  # slim.losses.cross_entropy_loss(logits[1],
+  #                                dense_labels,
+  #                                label_smoothing=0.1,
+  #                                weight=0.4,
+  #                                scope='aux_loss')
 
 
 def _activation_summary(x):

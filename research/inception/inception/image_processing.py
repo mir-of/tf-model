@@ -42,6 +42,12 @@ from __future__ import print_function
 
 import tensorflow as tf
 
+
+_R_MEAN = 123.68
+_G_MEAN = 116.78
+_B_MEAN = 103.94
+_CHANNEL_MEANS = [_R_MEAN, _G_MEAN, _B_MEAN]
+
 FLAGS = tf.app.flags.FLAGS
 
 tf.app.flags.DEFINE_integer('batch_size', 32,
@@ -69,6 +75,40 @@ tf.app.flags.DEFINE_integer('input_queue_memory_factor', 16,
                             """Default is ideal but try smaller values, e.g. """
                             """4, 2 or 1, if host memory is constrained. See """
                             """comments in code for more details.""")
+
+
+def _mean_image_subtraction(image, means, num_channels):
+  """Subtracts the given means from each image channel.
+
+  For example:
+    means = [123.68, 116.779, 103.939]
+    image = _mean_image_subtraction(image, means)
+
+  Note that the rank of `image` must be known.
+
+  Args:
+    image: a tensor of size [height, width, C].
+    means: a C-vector of values to subtract from each channel.
+    num_channels: number of color channels in the image that will be distorted.
+
+  Returns:
+    the centered image.
+
+  Raises:
+    ValueError: If the rank of `image` is unknown, if `image` has a rank other
+      than three or if the number of channels in `image` doesn't match the
+      number of values in `means`.
+  """
+  if image.get_shape().ndims != 3:
+    raise ValueError('Input must be of size [height, width, C>0]')
+
+  if len(means) != num_channels:
+    raise ValueError('len(means) must match the number of channels')
+
+  # We have a 1-D tensor of means; convert to 3-D.
+  means = tf.expand_dims(tf.expand_dims(means, 0), 0)
+
+  return image - means
 
 
 def inputs(dataset, batch_size=None, num_preprocess_threads=None):
@@ -160,6 +200,21 @@ def decode_jpeg(image_buffer, scope=None):
     image = tf.image.convert_image_dtype(image, dtype=tf.float32)
     return image
 
+
+def decode_image(image_buffer, scope=None):
+  """Decode a JPEG string into one 3-D float image Tensor.
+
+  Args:
+    image_buffer: scalar string Tensor.
+    scope: Optional scope for name_scope.
+  Returns:
+    3-D float Tensor.
+  """
+  with tf.name_scope(values=[image_buffer], name=scope,
+                     default_name='decode_image'):
+    # Decode the string as an RGB.
+    image = tf.image.decode_image(image_buffer, channels=3)
+    return image
 
 def distort_color(image, thread_id=0, scope=None):
   """Distort the color of the image.
@@ -301,6 +356,41 @@ def eval_image(image, height, width, scope=None):
     return image
 
 
+
+def mean_image_subtraction(image, means, num_channels):
+  """Subtracts the given means from each image channel.
+
+  For example:
+    means = [123.68, 116.779, 103.939]
+    image = _mean_image_subtraction(image, means)
+
+  Note that the rank of `image` must be known.
+
+  Args:
+    image: a tensor of size [height, width, C].
+    means: a C-vector of values to subtract from each channel.
+    num_channels: number of color channels in the image that will be distorted.
+
+  Returns:
+    the centered image.
+
+  Raises:
+    ValueError: If the rank of `image` is unknown, if `image` has a rank other
+      than three or if the number of channels in `image` doesn't match the
+      number of values in `means`.
+  """
+  if image.get_shape().ndims != 3:
+    raise ValueError('Input must be of size [height, width, C>0]')
+
+  if len(means) != num_channels:
+    raise ValueError('len(means) must match the number of channels')
+
+  # We have a 1-D tensor of means; convert to 3-D.
+  means = tf.expand_dims(tf.expand_dims(means, 0), 0)
+
+  return image - means
+
+
 def image_preprocessing(image_buffer, bbox, train, thread_id=0):
   """Decode and preprocess one image for evaluation or training.
 
@@ -321,27 +411,102 @@ def image_preprocessing(image_buffer, bbox, train, thread_id=0):
   if bbox is None:
     raise ValueError('Please supply a bounding box.')
 
-  image = decode_jpeg(image_buffer)
+  image = decode_image(image_buffer)
+  image = tf.to_float(image)
+
   height = FLAGS.image_size
   width = FLAGS.image_size
 
   if train:
-    image = distort_image(image, height, width, bbox, thread_id)
+    # image = distort_image(image, height, width, bbox, thread_id)
+    image.set_shape([height, width, 3])
   else:
     image = eval_image(image, height, width)
 
   # Finally, rescale to [-1,1] instead of [0, 1)
-  image = tf.subtract(image, 0.5)
-  image = tf.multiply(image, 2.0)
-  return image
+  # image = tf.subtract(image, 0.5)
+  # image = tf.multiply(image, 2.0)
 
+  return _mean_image_subtraction(image, _CHANNEL_MEANS, 3)
+  #return image
+
+
+# def parse_example_proto(example_serialized):
+#   """Parses an Example proto containing a training example of an image.
+#
+#   The output of the build_image_data.py image preprocessing script is a dataset
+#   containing serialized Example protocol buffers. Each Example proto contains
+#   the following fields:
+#
+#     image/height: 462
+#     image/width: 581
+#     image/colorspace: 'RGB'
+#     image/channels: 3
+#     image/class/label: 615
+#     image/class/synset: 'n03623198'
+#     image/class/text: 'knee pad'
+#     image/object/bbox/xmin: 0.1
+#     image/object/bbox/xmax: 0.9
+#     image/object/bbox/ymin: 0.2
+#     image/object/bbox/ymax: 0.6
+#     image/object/bbox/label: 615
+#     image/format: 'JPEG'
+#     image/filename: 'ILSVRC2012_val_00041207.JPEG'
+#     image/encoded: <JPEG encoded string>
+#
+#   Args:
+#     example_serialized: scalar Tensor tf.string containing a serialized
+#       Example protocol buffer.
+#
+#   Returns:
+#     image_buffer: Tensor tf.string containing the contents of a JPEG file.
+#     label: Tensor tf.int32 containing the label.
+#     bbox: 3-D float Tensor of bounding boxes arranged [1, num_boxes, coords]
+#       where each coordinate is [0, 1) and the coordinates are arranged as
+#       [ymin, xmin, ymax, xmax].
+#     text: Tensor tf.string containing the human-readable label.
+#   """
+#   # Dense features in Example proto.
+#   feature_map = {
+#       'image/encoded': tf.FixedLenFeature([], dtype=tf.string,
+#                                           default_value=''),
+#       'image/class/label': tf.FixedLenFeature([1], dtype=tf.int64,
+#                                               default_value=-1),
+#       'image/class/text': tf.FixedLenFeature([], dtype=tf.string,
+#                                              default_value=''),
+#   }
+#   sparse_float32 = tf.VarLenFeature(dtype=tf.float32)
+#   # Sparse features in Example proto.
+#   feature_map.update(
+#       {k: sparse_float32 for k in ['image/object/bbox/xmin',
+#                                    'image/object/bbox/ymin',
+#                                    'image/object/bbox/xmax',
+#                                    'image/object/bbox/ymax']})
+#
+#   features = tf.parse_single_example(example_serialized, feature_map)
+#   label = tf.cast(features['image/class/label'], dtype=tf.int32)
+#
+#   xmin = tf.expand_dims(features['image/object/bbox/xmin'].values, 0)
+#   ymin = tf.expand_dims(features['image/object/bbox/ymin'].values, 0)
+#   xmax = tf.expand_dims(features['image/object/bbox/xmax'].values, 0)
+#   ymax = tf.expand_dims(features['image/object/bbox/ymax'].values, 0)
+#
+#   # Note that we impose an ordering of (y, x) just to make life difficult.
+#   bbox = tf.concat(axis=0, values=[ymin, xmin, ymax, xmax])
+#
+#   # Force the variable number of bounding boxes into the shape
+#   # [1, num_boxes, coords].
+#   bbox = tf.expand_dims(bbox, 0)
+#   bbox = tf.transpose(bbox, [0, 2, 1])
+#
+#   return features['image/encoded'], label, bbox, features['image/class/text']
 
 def parse_example_proto(example_serialized):
   """Parses an Example proto containing a training example of an image.
 
   The output of the build_image_data.py image preprocessing script is a dataset
   containing serialized Example protocol buffers. Each Example proto contains
-  the following fields:
+  the following fields (values are included as examples):
 
     image/height: 462
     image/width: 581
@@ -369,43 +534,41 @@ def parse_example_proto(example_serialized):
     bbox: 3-D float Tensor of bounding boxes arranged [1, num_boxes, coords]
       where each coordinate is [0, 1) and the coordinates are arranged as
       [ymin, xmin, ymax, xmax].
-    text: Tensor tf.string containing the human-readable label.
   """
   # Dense features in Example proto.
   feature_map = {
-      'image/encoded': tf.FixedLenFeature([], dtype=tf.string,
+      'encoded': tf.FixedLenFeature([], dtype=tf.string,
                                           default_value=''),
-      'image/class/label': tf.FixedLenFeature([1], dtype=tf.int64,
+      'class/label': tf.FixedLenFeature([], dtype=tf.int64,
                                               default_value=-1),
-      'image/class/text': tf.FixedLenFeature([], dtype=tf.string,
+      'class/text': tf.FixedLenFeature([], dtype=tf.string,
                                              default_value=''),
   }
-  sparse_float32 = tf.VarLenFeature(dtype=tf.float32)
-  # Sparse features in Example proto.
-  feature_map.update(
-      {k: sparse_float32 for k in ['image/object/bbox/xmin',
-                                   'image/object/bbox/ymin',
-                                   'image/object/bbox/xmax',
-                                   'image/object/bbox/ymax']})
+  # sparse_float32 = tf.VarLenFeature(dtype=tf.float32)
+  # # Sparse features in Example proto.
+  # feature_map.update(
+  #     {k: sparse_float32 for k in ['image/object/bbox/xmin',
+  #                                  'image/object/bbox/ymin',
+  #                                  'image/object/bbox/xmax',
+  #                                  'image/object/bbox/ymax']})
 
   features = tf.parse_single_example(example_serialized, feature_map)
-  label = tf.cast(features['image/class/label'], dtype=tf.int32)
+  label = tf.cast(features['class/label'], dtype=tf.int32)
 
-  xmin = tf.expand_dims(features['image/object/bbox/xmin'].values, 0)
-  ymin = tf.expand_dims(features['image/object/bbox/ymin'].values, 0)
-  xmax = tf.expand_dims(features['image/object/bbox/xmax'].values, 0)
-  ymax = tf.expand_dims(features['image/object/bbox/ymax'].values, 0)
+  xmin = tf.expand_dims(tf.constant([0.1]), 0)
+  ymin = tf.expand_dims(tf.constant([0.1]), 0)
+  xmax = tf.expand_dims(tf.constant([0.9]), 0)
+  ymax = tf.expand_dims(tf.constant([0.9]), 0)
 
   # Note that we impose an ordering of (y, x) just to make life difficult.
-  bbox = tf.concat(axis=0, values=[ymin, xmin, ymax, xmax])
+  bbox = tf.concat([ymin, xmin, ymax, xmax], 0)
 
   # Force the variable number of bounding boxes into the shape
   # [1, num_boxes, coords].
   bbox = tf.expand_dims(bbox, 0)
   bbox = tf.transpose(bbox, [0, 2, 1])
 
-  return features['image/encoded'], label, bbox, features['image/class/text']
-
+  return features['encoded'], label, bbox
 
 def batch_inputs(dataset, batch_size, train, num_preprocess_threads=None,
                  num_readers=1):
@@ -434,8 +597,8 @@ def batch_inputs(dataset, batch_size, train, num_preprocess_threads=None,
     # Create filename_queue
     if train:
       filename_queue = tf.train.string_input_producer(data_files,
-                                                      shuffle=True,
-                                                      capacity=16)
+                                                      shuffle=False,
+                                                      capacity=1)
     else:
       filename_queue = tf.train.string_input_producer(data_files,
                                                       shuffle=False,
@@ -454,7 +617,7 @@ def batch_inputs(dataset, batch_size, train, num_preprocess_threads=None,
       raise ValueError('Please make num_readers at least 1')
 
     # Approximate number of examples per shard.
-    examples_per_shard = 1024
+    examples_per_shard =1
     # Size the random shuffle queue to balance between good global
     # mixing (more examples) and memory use (fewer examples).
     # 1 image uses 299*299*3*4 bytes = 1MB
@@ -489,7 +652,7 @@ def batch_inputs(dataset, batch_size, train, num_preprocess_threads=None,
     images_and_labels = []
     for thread_id in range(num_preprocess_threads):
       # Parse a serialized Example proto to extract the image and metadata.
-      image_buffer, label_index, bbox, _ = parse_example_proto(
+      image_buffer, label_index, bbox = parse_example_proto(
           example_serialized)
       image = image_preprocessing(image_buffer, bbox, train, thread_id)
       images_and_labels.append([image, label_index])
